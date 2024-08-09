@@ -1,0 +1,21 @@
+SELECT
+    co.country,                    -- Country of the customer
+    SUM(p.amount) AS total_sales   -- Total sales in each country
+FROM
+    payment p
+    INNER JOIN customer c ON p.customer_id = c.customer_id
+    INNER JOIN address a ON c.address_id = a.address_id
+    INNER JOIN city ci ON a.city_id = ci.city_id
+    INNER JOIN country co ON ci.country_id = co.country_id
+GROUP BY
+    co.country
+ORDER BY
+    total_sales DESC;  -- Display countries in order of highest sales
+
+
+*
+This SQL query analyzes whether sales figures vary across different geographic regions by aggregating total sales per country.
+It utilizes JOIN operations to merge data across multiple tables, including payment, customer, address, city, and country tables.
+By grouping the results by country and ordering them by total sales in descending order, this query highlights regions with the highest sales,
+providing insights into geographic market performance and helping to guide regional sales strategies.
+*/
