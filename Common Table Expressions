@@ -1,0 +1,56 @@
+/*
+This SQL query uses Common Table Expressions (CTEs) to perform a complex analysis identifying the top three selling categories within the top ten countries by total sales. The query is structured using two CTEs:
+1. `top_countries`: This CTE identifies the top ten countries based on total sales. It aggregates sales across multiple joined tables, orders the results by total sales, and restricts the output to the top ten, serving as a foundation for further category-specific analysis within these countries.
+2. `top_categories`: Building on the output of the `top_countries` CTE, this CTE analyzes sales data within these countries to rank the sales of different categories. Using the `ROW_NUMBER()` window function, it assigns a rank to each category within a country based on total sales, allowing for the extraction of the top three categories per country.
+The final SELECT statement outside of the CTEs utilizes the results from `top_categories` to display the countries, their top categories, and respective sales figures, focusing on the highest-performing segments. This structured approach using CTEs not only enhances readability and manageability of the SQL code but also facilitates modular and step-by-step data analysis, crucial for accurate and insightful results.
+*/
+
+
+WITH top_countries AS (
+    SELECT
+        co.country,
+        SUM(p.amount) AS total_sales
+    FROM
+        payment p
+        INNER JOIN customer c ON p.customer_id = c.customer_id
+        INNER JOIN address a ON c.address_id = a.address_id
+        INNER JOIN city ci ON a.city_id = ci.city_id
+        INNER JOIN country co ON ci.country_id = co.country_id
+    GROUP BY
+        co.country
+    ORDER BY
+        total_sales DESC
+    LIMIT 10
+),
+top_categories AS (
+    SELECT
+        co.country,
+        cat.name AS category,
+        SUM(p.amount) AS total_sales,
+        ROW_NUMBER() OVER (PARTITION BY co.country ORDER BY SUM(p.amount) DESC) as category_rank
+    FROM
+        payment p
+        INNER JOIN rental r ON p.rental_id = r.rental_id
+        INNER JOIN customer c ON r.customer_id = c.customer_id
+        INNER JOIN address a ON c.address_id = a.address_id
+        INNER JOIN city ci ON a.city_id = ci.city_id
+        INNER JOIN country co ON ci.country_id = co.country_id
+        INNER JOIN inventory i ON r.inventory_id = i.inventory_id
+        INNER JOIN film f ON i.film_id = f.film_id
+        INNER JOIN film_category fc ON f.film_id = fc.film_id
+        INNER JOIN category cat ON fc.category_id = cat.category_id
+    WHERE
+        co.country IN (SELECT country FROM top_countries)
+    GROUP BY
+        co.country, cat.name
+)
+SELECT
+    country,
+    category,
+    total_sales
+FROM
+    top_categories
+WHERE
+    category_rank <= 3
+ORDER BY
+    country, total_sales DESC;
