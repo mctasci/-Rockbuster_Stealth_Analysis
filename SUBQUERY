@@ -1,0 +1,36 @@
+/*
+This SQL query determines which countries and cities within those countries have the highest number of customers. The query uses a subquery to first identify the top ten countries by customer count. It then uses this list to filter and determine the number of customers in each city within these top countries.
+1. `Subquery`: This identifies the top ten countries with the highest customer counts by joining the customer, address, city, and country tables and grouping the results by country. It then orders the countries by descending customer count and limits the output to the top ten.
+2. `Main Query`: Using the countries identified in the subquery, this part of the query counts customers per city within these top countries. It joins the same tables to ensure that data is consistent and accurate, grouping the results by city and country to provide detailed insights.
+The result is ordered by the number of customers in descending order to highlight areas with the highest customer density, providing valuable information for targeted marketing and resource allocation.
+*/
+
+SELECT 
+    D.country, 
+    C.city,		
+    COUNT(A.customer_id) AS number_of_customers		
+FROM 
+    customer A		
+    INNER JOIN address B ON A.address_id = B.address_id		
+    INNER JOIN city C ON B.city_id = C.city_id		
+    INNER JOIN country D ON C.country_id = D.country_id		
+WHERE 
+    D.country IN (
+        SELECT 
+            country	
+        FROM 
+            customer A	
+            INNER JOIN address B ON A.address_id = B.address_id	
+            INNER JOIN city C ON B.city_id = C.city_id	
+            INNER JOIN country D ON C.country_id = D.country_id		
+        GROUP BY 
+            D.country	
+        ORDER BY 
+            COUNT(A.customer_id) DESC	
+        LIMIT 10	
+    )	
+GROUP BY 
+    C.city, D.country		
+ORDER BY 
+    number_of_customers DESC		
+LIMIT 10;
