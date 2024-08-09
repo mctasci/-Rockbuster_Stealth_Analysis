@@ -32,4 +32,3 @@ This project involves analyzing the Rockbuster Video Rental Company’s database
 - **SQL Analysis:** Comprehensive answers to management’s questions.
 - **Visualizations:** Insights through Tableau Public dashboards.
 - **Narrative:** Strategic insights and recommendations.
-- 
